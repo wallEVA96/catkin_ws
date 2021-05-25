@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="mickx4_serial" type="robot_control_panel.py" name="mickx4_teleop" output="screen" launch-prefix="xterm -e" />
+	<node pkg="mickx4_serial" type="mickx4_driver" name="mickx4_drv" launch-prefix="xterm -e" />
+	<node pkg="rviz" type="rviz" name="rviz" launch-prefix="xterm -e" />
+
+</launch>
