@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-	<node pkg="mickx4_serial" type="robot_control_panel.py" name="mickx4_teleop" output="screen" launch-prefix="xterm -e" />
-	<node pkg="mickx4_serial" type="mickx4_driver" name="mickx4_drv" launch-prefix="xterm -e" />
-	<node pkg="rviz" type="rviz" name="rviz" launch-prefix="xterm -e" />
-
+	<include file="$(find rplidar_ros)/launch/rplidar.launch" />
+	<include file="$(find mickx4_nav)/launch/gmapping.launch" />
+	<group ns="mickx4">
+	<node pkg="tf" type="static_transform_publisher" name="base2laser_broadcaster" args="0 0 0.1 0 0 0 base_footprint base_link 100"/>
+	</group>
+	<!-- <node pkg="mickx4_serial" type="robot_control_panel.py" name="mickx4_teleop" output="screen" /> -->
+	<node pkg="mickx4_serial" type="mickx4_driver" name="mickx4_drv" output="screen" />
 </launch>

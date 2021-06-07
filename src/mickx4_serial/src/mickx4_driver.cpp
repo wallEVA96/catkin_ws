@@ -46,14 +46,13 @@ int parse_serial_response(uint8_t *res, size_t size)
 	uint8_t check_sum = 0;
 	for(uint8_t i = 0; i < (size - 1); i++)
 		check_sum += res[i];
-//	ROS_INFO("res : %x check_sum : %x ", res[size-1], check_sum);
 	if(res[size-1] != check_sum)
 		return 0;
 	
-	mickx4_info.left_front_encoder = (res[3]<<24)+(res[4]<<16)+(res[5]<<8)+res[6];
-	mickx4_info.right_front_encoder = (res[7]<<24)+(res[8]<<16)+(res[9]<<8)+res[10];
-	mickx4_info.left_back_encoder = (res[11]<<24)+(res[12]<<16)+(res[13]<<8)+res[14];
-	mickx4_info.right_back_encoder = (res[15]<<24)+(res[16]<<16)+(res[17]<<8)+res[18];
+	mickx4_info.right_front_encoder = (res[3]<<24)+(res[4]<<16)+(res[5]<<8)+res[6];
+	mickx4_info.left_front_encoder = (res[7]<<24)+(res[8]<<16)+(res[9]<<8)+res[10];
+	mickx4_info.right_back_encoder = (res[11]<<24)+(res[12]<<16)+(res[13]<<8)+res[14];
+	mickx4_info.left_back_encoder = (res[15]<<24)+(res[16]<<16)+(res[17]<<8)+res[18];
 	mickx4_info.battery_percent = res[19];
 	mickx4_info.battery_voltage = ((res[20]<<8)+res[21])*0.1;
 /*
@@ -73,7 +72,7 @@ int parse_serial_response(uint8_t *res, size_t size)
  */
 #define WHEEL_DIAMETER 0.154
 #define WHEEL_PERIMETER (WHEEL_DIAMETER * M_PI) 
-const double mickx4_width = 0.284; // m
+const double mickx4_width = 0.284/0.622222; // m
 geometry_msgs::Twist mickx4_ctrl_msg;
 void mickx4_ctrl_sub(const geometry_msgs::Twist &msg)
 {
@@ -108,7 +107,7 @@ void comm_with_mickx4(const geometry_msgs::Twist &msg, serial::Serial &mickx4_se
  *  |   -------
  *  0 --------------------> x
  * */
-	const double WHEEL_RATIO = 6840.0/3960.0; //6480 6560 6840
+	const static double WHEEL_RATIO = 6480.0/3960.0; //6480 6560 6840
 	double vel_x = 0.0, vel_theta = 0.0;
 	double vel_right = 0.0, vel_left = 0.0;
 	
@@ -135,23 +134,15 @@ void comm_with_mickx4(const geometry_msgs::Twist &msg, serial::Serial &mickx4_se
 
 	double rpm_right_accurate = vel_right / WHEEL_PERIMETER * 60.0;
     double rpm_left_accurate = vel_left / WHEEL_PERIMETER * 60.0;
-/*
-	std::cout << "WHEEL_RATIO:" << WHEEL_RATIO << std::endl;
-	std::cout << "rpm double:" << rpm_left_accurate  << std::endl;
-	std::cout << "rpm double:" << rpm_right_accurate << std::endl;
-*/
+	
 	int rpm_right = static_cast<int>(rpm_right_accurate * WHEEL_RATIO);
 	int rpm_left = static_cast<int>(rpm_left_accurate * WHEEL_RATIO);
 	rpm_right = rpm_right>100?100:rpm_right;
 	rpm_right = rpm_right<-100?-100:rpm_right;
 	rpm_left = rpm_left>100?100:rpm_left;
 	rpm_left = rpm_left<-100?-100:rpm_left;
-/*	
-	std::cout << "rpm int:" << std::dec << rpm_left << std::endl;
-	std::cout << "rpm int:" << std::dec << rpm_right << std::endl;
-*/
+
 	// mickx4's datasheet is terrible,
-	// model's left of robot means velocity model's right.
 	// left front
 	mickx4_array[3] = (uint8_t)((rpm_right&0xff00)>>8); // high bytes
 	mickx4_array[4] = (uint8_t)(rpm_right&0xff); // low bytes
@@ -168,16 +159,6 @@ void comm_with_mickx4(const geometry_msgs::Twist &msg, serial::Serial &mickx4_se
 	for(uint8_t index = 0; index < 11; index++)
 		mickx4_array[11] += mickx4_array[index];
 	
-//	mickx4_array[3] = 0x00;
-//	mickx4_array[4] = 0x78;
-//	mickx4_array[5] = 0x00;
-//	mickx4_array[6] = 0x00;
-//	mickx4_array[7] = 0x00;
-//	mickx4_array[8] = 0x78;
-//	mickx4_array[9] = 0x00;
-//	mickx4_array[10] = 0x00;
-//	mickx4_array[11] = 0xE5; //
-//	
 	mickx4_serial.write(mickx4_array, sizeof(mickx4_array));
 
 	uint8_t mickx4_rx[23] = {0};
@@ -216,13 +197,13 @@ int main(int argc, char **argv)
 	ros::Publisher odom_pub = n.advertise<nav_msgs::Odometry>("odom", 10);
 
 	/* open serial */
-	std::string mickx4_port("/dev/ttyUSB0");
+	std::string mickx4_port("/dev/mickx4");
 	unsigned long mickx4_port_baud = 115200;
 	serial::Serial mickx4_serial(mickx4_port, mickx4_port_baud, serial::Timeout::simpleTimeout(1000));
 	if(mickx4_serial.isOpen())
-		ROS_DEBUG("/dev/ttyUSB0 is opened for mickx4");
+		ROS_DEBUG("/dev/mickx4 is opened for mickx4");
 	else
-		ROS_ERROR("open /dev/ttyUSB0 fail for mickx4");
+		ROS_ERROR("open /dev/mickx4 fail for mickx4");
 	/* read init value */
 	comm_with_mickx4(mickx4_ctrl_msg, mickx4_serial);
 	
@@ -258,8 +239,8 @@ int main(int argc, char **argv)
 		right_enc = (double)(mickx4_info.right_back_encoder + mickx4_info.right_front_encoder) / 2.0;
 		left_enc = (double)(mickx4_info.left_back_encoder + mickx4_info.left_front_encoder) / 2.0;
 	
-		left_dis = (left_enc - left_enc_before) / ticks_per_meter;
-		right_dis = (right_enc - right_enc_before) / ticks_per_meter;
+		left_dis = (left_enc - left_enc_before) / ticks_per_meter * 1.045;
+		right_dis = (right_enc - right_enc_before) / ticks_per_meter * 1.045;
 		right_enc_before = right_enc;
 		left_enc_before = left_enc;
 		
@@ -276,9 +257,9 @@ int main(int argc, char **argv)
 		odom_trans.transform.translation.x = x;
 		odom_trans.transform.translation.y = y;
 		odom_trans.transform.translation.z = 0;
-		//odom_quat = tf::createQuaternionMsgFromRollPitchYaw(0, 0, th);
 		odom_quat = tf::createQuaternionMsgFromYaw(th);
 		odom_trans.transform.rotation = odom_quat;
+		
 		/* update odometry */
 		nav_msgs::Odometry odom;
 		odom.header.stamp = current_time;
@@ -297,7 +278,7 @@ int main(int argc, char **argv)
 		
 		/* publish odometry and odom tf */
 		broadcaster.sendTransform(odom_trans);
-		//odom_pub.publish(odom);
+		odom_pub.publish(odom);
 
 		ros::spinOnce();
 		loop_rate.sleep();	
