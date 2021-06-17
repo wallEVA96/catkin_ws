@@ -1,10 +1,5 @@
-<?xml version="1.0"?>
 <launch>
-	<include file="$(find rplidar_ros)/launch/rplidar.launch" />
-	<include file="$(find mickx4_nav)/launch/gmapping.launch" />
-	<group ns="mickx4">
-	<node pkg="tf" type="static_transform_publisher" name="base2laser_broadcaster" args="0 0 0.1 0 0 0 base_footprint base_link 100"/>
-	</group>
-	<!-- <node pkg="mickx4_serial" type="robot_control_panel.py" name="mickx4_teleop" output="screen" /> -->
+	<param name="robot_description" textfile="$(find mickx4_serial)/urdf/mickx4.urdf" />
+	<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" />
 	<node pkg="mickx4_serial" type="mickx4_driver" name="mickx4_drv" output="screen" />
 </launch>
