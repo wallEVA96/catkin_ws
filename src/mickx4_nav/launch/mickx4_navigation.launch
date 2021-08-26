@@ -1,6 +1,8 @@
 <launch>
 	<include file="$(find mickx4_serial)/launch/mickx4_serial.launch" />
 	<include file="$(find rplidar_ros)/launch/rplidar.launch" />
-	<include file="$(find mickx4_nav)/launch/gmapping.launch" />
+	<arg name="map_name" value="sino_lab4.yaml" />
+	<node name="map_server" pkg="map_server" type="map_server" args="$(find mickx4_nav)/maps/$(arg map_name)"/>
+    <include file="$(find mickx4_nav)/launch/amcl.launch" />
 	<include file="$(find mickx4_nav)/launch/move_base.launch" />
 </launch>

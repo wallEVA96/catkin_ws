@@ -218,7 +218,7 @@ int main(int argc, char **argv)
 	odom_trans.header.frame_id = "odom";
 	odom_trans.child_frame_id = "base_footprint";
 	ros::Time last_time = ros::Time::now();
-	ros::Rate loop_rate(20);
+	ros::Rate loop_rate(100);
 	
 	right_enc_before = (double)(mickx4_info.right_back_encoder + mickx4_info.right_front_encoder) / 2.0;
 	left_enc_before = (double)(mickx4_info.left_back_encoder + mickx4_info.left_front_encoder) / 2.0;

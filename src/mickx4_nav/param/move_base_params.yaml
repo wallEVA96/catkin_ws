@@ -7,9 +7,9 @@ planner_frequency: 0.2
 use_quadratic: true
 max_planning_retries: 2
 controller_patience: 20 
-conservative_reset_dist: 6.0
+conservative_reset_dist: 4.0
 oscillation_timeout: 10
 oscillation_distance: 0.05
-recovery_behavior_enabled: true
-clearing_rotation_allowed: true
+recovery_behavior_enabled: false
+clearing_rotation_allowed: false
 outline_map: false
