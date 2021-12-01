@@ -1,5 +1,6 @@
 base_global_planner: "navfn/NavfnROS"
-base_local_planner: "base_local_planner/TrajectoryPlannerROS"
+#base_local_planner: "base_local_planner/TrajectoryPlannerROS"
+base_local_planner: "teb_local_planner/TebLocalPlannerROS"
 shutdown_costmap: false
 controller_frequency: 10.0
 planner_patience: 8.0
@@ -8,7 +9,7 @@ use_quadratic: true
 max_planning_retries: 2
 controller_patience: 20 
 conservative_reset_dist: 4.0
-oscillation_timeout: 10
+oscillation_timeout: 0
 oscillation_distance: 0.05
 recovery_behavior_enabled: false
 clearing_rotation_allowed: false
