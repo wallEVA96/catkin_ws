@@ -1,0 +1,11 @@
+<launch>
+	<node pkg="chassis_commu" type="chassis_commu_node" name="chassis_commu_node" required="true" output="screen" launch-prefix="xterm -e">
+		<param name="chassis_commu_port" type="string" value="/dev/chassisCOM4" />
+		<param name="chassis_commu_baudrate" type="int" value="115200" />
+		<param name="chassis_commu_timeout" type="int" value="1000" />
+		<param name="chassis_encoder_resolution" type="int" value="1200" />
+		<param name="chassis_wheel_diameter" type="double" value="0.1288" />
+		<param name="chassis_wheel_track" type="double" value="0.3559" />
+		<param name="chassis_gear_reduction" type="double" value="1.0" />
+	</node>
+</launch>

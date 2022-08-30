@@ -1,0 +1,4 @@
+<launch>
+	<include file="$(find chassis_commu)/launch/chassis_commu.launch" />
+	<include file="$(find lslidar_n301_decoder)/launch/lslidar_n301.launch" />
+</launch>
