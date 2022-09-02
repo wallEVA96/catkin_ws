@@ -8,4 +8,10 @@
 		<param name="chassis_wheel_track" type="double" value="0.3559" />
 		<param name="chassis_gear_reduction" type="double" value="1.0" />
 	</node>
+	
+	<node pkg="tf" type="static_transform_publisher" name="front_left_sonar_tf" args="0.18 0.10 0.12 0 0 0.259 0.966 base_footprint front_left_sonar 100" />
+	<node pkg="tf" type="static_transform_publisher" name="front_midd_sonar_tf" args="0.20 0 0.12 0 0 0 1 base_footprint front_midd_sonar 100" />
+	<node pkg="tf" type="static_transform_publisher" name="front_right_sonar_tf" args="0.18 -0.10 0.12 0 0 -0.259 0.966 base_footprint front_right_sonar 100" />
+	<node pkg="tf" type="static_transform_publisher" name="back_midd_sonar_tf" args="-0.20 0 0.12 0 0 1 0 base_footprint back_midd_sonar 100" />
+
 </launch>

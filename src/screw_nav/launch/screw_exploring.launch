@@ -1,0 +1,6 @@
+<launch>
+	<include file="$(find chassis_commu)/launch/chassis_commu.launch" />
+	<include file="$(find lslidar_n301_decoder)/launch/lslidar_n301.launch" />
+	<include file="$(find screw_nav)/launch/gmapping.launch" />
+	<include file="$(find screw_nav)/launch/move_base.launch" />
+</launch>

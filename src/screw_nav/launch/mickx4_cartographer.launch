@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find rplidar_ros)/launch/rplidar.launch" />
+	<include file="$(find mickx4_serial)/launch/mickx4_serial.launch" />
+	<include file="$(find mickx4_nav)/launch/cartographer.launch" />
+</launch>

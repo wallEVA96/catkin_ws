@@ -49,8 +49,12 @@ chassis_commu::chassis_commu(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 	nh_private.param<double>("chassis_gear_reduction", chassis_gear_reduction_, 1.0);
 	
 	vel_sub_ = nh.subscribe("/cmd_vel", 100, &chassis_commu::chassisVelCallback, this);
-	odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 10);
-
+	odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 100);
+	
+	front_left_sonar_pub_ = nh.advertise<sensor_msgs::Range>("/front_left_sonar", 5);
+	front_midd_sonar_pub_ = nh.advertise<sensor_msgs::Range>("/front_midd_sonar", 5);
+	front_right_sonar_pub_ = nh.advertise<sensor_msgs::Range>("/front_right_sonar", 5);
+	back_midd_sonar_pub_ = nh.advertise<sensor_msgs::Range>("/back_midd_sonar", 5);
 
 	chassis_enc_per_meter_ = chassis_encoder_resolution_*chassis_gear_reduction_/(chassis_wheel_diameter_*M_PI);
 	ROS_INFO("Chassis Enc Per Meter: %f", chassis_enc_per_meter_);	
@@ -281,15 +285,41 @@ uint8_t chassis_commu::getEnc()
 /**
  * @brief get sonar sensor data.
  */
-void chassis_commu::getSonar()
+uint8_t chassis_commu::getSonar()
 {
 	std::string get_sonar_cmd = "p\r";
 	std::string sonar_cmd_resp;
 #define SONAR_CMD_RESP_SIZE 20
 	if(exeCmd(get_sonar_cmd, sonar_cmd_resp, SONAR_CMD_RESP_SIZE))
 	{
-		ROS_INFO("Sonar Raw: %s", sonar_cmd_resp.c_str());
+		if(sonar_cmd_resp.length() >= 8)
+		{
+			char cmd_resp_str[SONAR_CMD_RESP_SIZE] = {0};
+			strncpy(cmd_resp_str, sonar_cmd_resp.c_str(), SONAR_CMD_RESP_SIZE);
+
+			char *p_str_save = NULL, *p_front_l_dis = NULL, *p_front_m_dis = NULL, *p_front_r_dis = NULL, *p_back_m_dis = NULL;
+			p_front_l_dis = strtok_r(cmd_resp_str, " ", &p_str_save);
+			p_front_m_dis = strtok_r(NULL, " ", &p_str_save);
+			p_front_r_dis = strtok_r(NULL, " ", &p_str_save);
+			p_back_m_dis = strtok_r(NULL, "\r", &p_str_save);
+			
+			if(p_front_l_dis == NULL || p_front_r_dis == NULL || p_front_m_dis == NULL || p_back_m_dis == NULL)
+			{
+				ROS_WARN("Sonar Data Addr Is NULL");
+				return 0;
+			}
+			
+			front_left_sonar_ = atoi(p_front_l_dis);
+			front_right_sonar_ = atoi(p_front_r_dis);
+			front_midd_sonar_ = atoi(p_front_m_dis);
+			back_midd_sonar_ = atoi(p_back_m_dis);
+			return 1;
+		}
 	}
+	else
+		ROS_WARN("Sonar Reply Raw: %s", sonar_cmd_resp.c_str());
+	
+	return 0;
 }
 
 /**
@@ -457,7 +487,46 @@ void chassis_commu::poll()
 		}
 		else
 			ROS_WARN("Get Enc Errorly, Attention! ");
-		//getSonar();
+		/* measure sonar sensor */
+		if(getSonar())
+		{
+#define FIELD_OF_VIEW_RAD (30*3.14/180)
+			ROS_INFO("Sonar Range: %fm, %fm, %fm, %fm", front_left_sonar_/100.0, front_midd_sonar_/100.0, front_right_sonar_/100.0, back_midd_sonar_/100.0);	
+			sensor_msgs::Range sonar_sensor;
+			float sonar_range;
+			sonar_sensor.radiation_type = sensor_msgs::Range::ULTRASOUND;
+			sonar_sensor.field_of_view = FIELD_OF_VIEW_RAD;
+			sonar_sensor.header.stamp = curr_tm_;
+			sonar_sensor.max_range = 0.5;
+			sonar_sensor.min_range = 0.0;
+			sonar_sensor.header.frame_id = "front_left_sonar";
+			sonar_range = front_left_sonar_/100.0;
+			sonar_range = (sonar_range==0.0?1.0:sonar_range);
+			sonar_range = (sonar_range>=0.5?0.5:sonar_range);
+			sonar_sensor.range = sonar_range;
+			front_left_sonar_pub_.publish(sonar_sensor);
+		
+			sonar_sensor.header.frame_id = "front_midd_sonar";
+			sonar_range = front_midd_sonar_/100.0;
+			sonar_range = (sonar_range==0.0?1.0:sonar_range);
+			sonar_range = (sonar_range>=0.5?0.5:sonar_range);
+			sonar_sensor.range = sonar_range;
+			front_midd_sonar_pub_.publish(sonar_sensor);
+
+			sonar_sensor.header.frame_id = "front_right_sonar";
+			sonar_range = front_right_sonar_/100.0;
+			sonar_range = (sonar_range==0.0?1.0:sonar_range);
+			sonar_range = (sonar_range>=0.5?0.5:sonar_range);
+			sonar_sensor.range = sonar_range;
+			front_right_sonar_pub_.publish(sonar_sensor);
+			
+			sonar_sensor.header.frame_id = "back_midd_sonar";
+			sonar_range = back_midd_sonar_/100.0;
+			sonar_range = (sonar_range==0.0?1.0:sonar_range);
+			sonar_range = (sonar_range>=0.5?0.5:sonar_range);
+			sonar_sensor.range = sonar_range;
+			back_midd_sonar_pub_.publish(sonar_sensor);
+		}
 
 		ros::spinOnce();
 		rate.sleep();

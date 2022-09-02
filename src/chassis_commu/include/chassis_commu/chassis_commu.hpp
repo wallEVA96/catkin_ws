@@ -18,6 +18,7 @@
 #include "geometry_msgs/Twist.h"
 #include "tf/transform_broadcaster.h"
 #include "nav_msgs/Odometry.h"
+#include "sensor_msgs/Range.h"
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <cmath>
@@ -38,7 +39,7 @@ public:
 	uint8_t resetEnc();
 	uint8_t getEnc();
 	uint8_t cfgPID();
-	void getSonar();
+	uint8_t getSonar();
 	void setVelocity(float l_vel,float r_vel);
 	void chassisVelCallback(const geometry_msgs::Twist &vel_msg);
 	void poll();
@@ -48,6 +49,11 @@ private:
 	ros::Publisher odom_pub_;
 	tf::TransformBroadcaster odom_bc_;
 
+	ros::Publisher front_left_sonar_pub_;
+	ros::Publisher front_midd_sonar_pub_;
+	ros::Publisher front_right_sonar_pub_;
+	ros::Publisher back_midd_sonar_pub_;
+	
 	boost::mutex serial_mutex_;  
 
 	serial::Serial serial_;
@@ -72,10 +78,10 @@ private:
 	std::string Kd_;
 	std::string Ko_;
 	
-	int front_left_sonar_;
-	int front_midd_sonar_;
-	int front_right_sonar_;
-	int back_midd_sonar_;
+	uint16_t front_left_sonar_;
+	uint16_t front_midd_sonar_;
+	uint16_t front_right_sonar_;
+	uint16_t back_midd_sonar_;
 	
 	double chassis_wheel_diameter_;
 	double chassis_wheel_track_;
