@@ -58,6 +58,8 @@ private:
 
 	serial::Serial serial_;
 	std::string port_;
+	std::string odom_frame_;
+	std::string base_footprint_frame_;
 	int baud_rate_;
 	int time_out_;
 

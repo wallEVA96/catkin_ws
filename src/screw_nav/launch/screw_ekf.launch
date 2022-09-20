@@ -1,0 +1,18 @@
+<launch>
+	<node pkg="yesense_imu" type="yesense_imu_node" name="yesense_imu_node"  output = "screen" >
+      <param name="yesense_port"      type="string" value="/dev/imuCOM2"/>
+      <param name="yesense_baudrate"  type="int"    value="460800"/>
+	  <remap from="/imu/data" to="/imu_data" />
+	</node>
+	
+	<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+	  <param name="output_frame" value="ekf_combined"/>
+	  <param name="base_footprint_frame" value="base_footprint"/>
+	  <param name="freq" value="30.0"/>
+	  <param name="sensor_timeout" value="1.0"/>  
+	  <param name="odom_used" value="true"/>
+	  <param name="imu_used" value="true"/>
+	  <param name="vo_used" value="false"/>
+	</node>
+
+</launch>

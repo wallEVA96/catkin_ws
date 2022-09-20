@@ -24,7 +24,9 @@
  * @param time_out
  */
 chassis_commu::chassis_commu(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
-							:port_("/dev/ChassisCOM")
+							:port_("/dev/chassisCOM4")
+							,odom_frame_("odom")
+							,base_footprint_frame_("base_footprint")
 							,baud_rate_(115200)
 							,time_out_(500)
 							,pid_freq_(CHASSIS_PID_FREQ)
@@ -41,6 +43,8 @@ chassis_commu::chassis_commu(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 							,back_midd_sonar_(0)
 {
 	nh_private.param<std::string>("chassis_commu_port", port_, port_);
+	nh_private.param<std::string>("odom_frame", odom_frame_, odom_frame_);
+	nh_private.param<std::string>("base_footprint_frame", base_footprint_frame_, base_footprint_frame_);
     nh_private.param<int>("chassis_commu_baudrate", baud_rate_, baud_rate_);
     nh_private.param<int>("chassis_commu_timeout", time_out_, time_out_);
 	nh_private.param<int>("chassis_encoder_resolution", chassis_encoder_resolution_, 1200);
@@ -464,8 +468,8 @@ void chassis_commu::poll()
 			//ROS_INFO("Vel: %f, Vel Th %f", vel_xy, vel_th);
 
 			odom_trans.header.stamp = curr_tm_;
-			odom_trans.header.frame_id = "odom";
-			odom_trans.child_frame_id = "base_footprint";
+			odom_trans.header.frame_id = odom_frame_;
+			odom_trans.child_frame_id = base_footprint_frame_;
 			odom_trans.transform.translation.x = chassis_x_;
 			odom_trans.transform.translation.y = chassis_y_;
 			odom_trans.transform.translation.z = 0.0;
@@ -474,8 +478,8 @@ void chassis_commu::poll()
 			odom_bc_.sendTransform(odom_trans);
 
 			odom_info.header.stamp = curr_tm_;
-			odom_info.header.frame_id = "odom";
-			odom_info.child_frame_id = "base_footprint";
+			odom_info.header.frame_id = odom_frame_;
+			odom_info.child_frame_id = base_footprint_frame_;
 			odom_info.pose.pose.position.x = chassis_x_;
 			odom_info.pose.pose.position.y = chassis_y_;
 			odom_info.pose.pose.position.z = 0.0;
@@ -491,7 +495,7 @@ void chassis_commu::poll()
 		if(getSonar())
 		{
 #define FIELD_OF_VIEW_RAD (30*3.14/180)
-			ROS_INFO("Sonar Range: %fm, %fm, %fm, %fm", front_left_sonar_/100.0, front_midd_sonar_/100.0, front_right_sonar_/100.0, back_midd_sonar_/100.0);	
+			//ROS_INFO("Sonar Range: %fm, %fm, %fm, %fm", front_left_sonar_/100.0, front_midd_sonar_/100.0, front_right_sonar_/100.0, back_midd_sonar_/100.0);	
 			sensor_msgs::Range sonar_sensor;
 			float sonar_range;
 			sonar_sensor.radiation_type = sensor_msgs::Range::ULTRASOUND;

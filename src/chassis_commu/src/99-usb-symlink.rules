@@ -1,0 +1,2 @@
+KERNELS=="1-2.4",MODE:="0777",GROUP:="dialout",SYMLINK+="chassisCOM4"
+KERNELS=="1-2.2",MODE:="0777",GROUP:="dialout",SYMLINK+="imuCOM2"

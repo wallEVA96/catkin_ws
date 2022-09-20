@@ -1,11 +1,11 @@
 NavfnROS:
-
  allow_unknown: true
  default_tolerance: 0.05
  visualize_potential: true
  publish_potential: true
+ orientation_mode: 0
  use_quadratic: true
  use_dijkstra: true
  allow_unknown: true
- cost_factor: 3
- outline_map: false
+ cost_factor: 3.0
+ outline_map: false #usage of non static global costmap, this set to false.
