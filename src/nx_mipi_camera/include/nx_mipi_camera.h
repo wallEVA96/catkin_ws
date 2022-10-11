@@ -23,6 +23,7 @@
 #include <vision_msgs/VisionInfo.h>
 #include <jetson-utils/videoSource.h>
 #include "image_converter.h"
+#include "detectNet.h"
 
 /**
  * @brief nvidia mipi camera application.
@@ -38,13 +39,17 @@ public:
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_private;
 	ros::Publisher img_pub;
-	image_transport::ImageTransport *img_tp;
+	image_transport::ImageTransport img_tp;
+	image_transport::ImageTransport *p_img_tp;
 	image_transport::Publisher img_tp_pub;
-
+	/* detectnet*/
+	detectNet *net;
+	detectNet::Detection *detections = NULL;
+	const uint32_t overlayFlags;
 private:
 	videoOptions video_options;
 	videoSource *video_stream;
-	imageConverter *img_cvt;
+	imageConverter *p_img_cvt;
 	std::string resource_str;
 	std::string codec_str;
 	std::string flip_str;

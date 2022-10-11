@@ -18,6 +18,7 @@
 nx_mipi_camera::nx_mipi_camera(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 				:nh(nh)
 				,nh_private(nh_private)
+				,img_tp(nh_private)
 				,resource_str("csi://0")
 				,codec_str("unknown")
 				,flip_str("none")
@@ -26,6 +27,7 @@ nx_mipi_camera::nx_mipi_camera(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 				,video_loop(0)
 				,video_rtspLatency(2000)
 				,video_framerate(0)
+				,overlayFlags(0x07)  //line|conf|label|box
 {
 	nh_private.getParam("resource", resource_str);
 	nh_private.getParam("codec", codec_str);
@@ -34,7 +36,7 @@ nx_mipi_camera::nx_mipi_camera(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 	nh_private.getParam("loop", video_loop);
 	nh_private.getParam("rtsplatency", video_rtspLatency);
 	nh_private.getParam("framerate", video_framerate);
-
+	
 	if(resource_str.size() != 0 && flip_str.size() != 0)
 	{
 		video_options.codec = videoOptions::CodecFromStr(codec_str.c_str());
@@ -53,25 +55,36 @@ nx_mipi_camera::nx_mipi_camera(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 	}
 
 	/* create image converter */
-	img_cvt = new imageConverter();
-	if(!img_cvt)
+	p_img_cvt = new imageConverter();
+	if(!p_img_cvt)
 	{
 		ROS_ERROR("Failed To Create ImageConverter");
 		return ;	
 	}
 	/* advertise img raw topic */
-	img_pub = nh_private.advertise<sensor_msgs::Image>("raw", 2);
-	img_tp = new image_transport::ImageTransport(nh_private);
-	img_tp_pub = img_tp->advertise("img_tp_raw", 1);
-}
+//	img_pub = nh_private.advertise<sensor_msgs::Image>("raw", 2);
+//	p_img_tp = new image_transport::ImageTransport(nh_private);
+//	img_tp_pub = p_img_tp->advertise("img_tp_raw", 1);
+	img_tp_pub = img_tp.advertise("img_tp", 1);
 
+	/* Create detectNet */
+	net = detectNet::Create(detectNet::NetworkTypeFromStr("ssd-mobilenet-v2"), 0.2f, 1);
+//	net->SetLineWidth(3.0);;
+	if(!net){
+		ROS_ERROR("Failed To Create Detectnet.");
+		return ;
+	}
+}
 /**
  * @brief 
  */
 nx_mipi_camera::~nx_mipi_camera()
 {
-	delete img_tp;
-	delete img_cvt;
+//	delete p_img_tp;
+	if(p_img_tp != NULL) { delete p_img_cvt; p_img_cvt = NULL; }
+	if(video_stream != NULL) { delete video_stream; video_stream = NULL; }
+	if(p_img_cvt != NULL) { delete p_img_cvt; p_img_cvt = NULL; }
+	if(net != NULL) { delete net, net = NULL; }
 	ROS_INFO("Desconstruct Nx MIPI Camera");
 }
 
@@ -82,7 +95,7 @@ nx_mipi_camera::~nx_mipi_camera()
  */
 int nx_mipi_camera::initSuccess()
 {
-	if(video_stream == NULL || img_cvt == NULL)
+	if(video_stream == NULL || p_img_cvt == NULL)
 		return 0;
 	
 	/* Try To Open camera Stream */
@@ -110,19 +123,33 @@ bool nx_mipi_camera::measureFrame()
 		return false;
 	}
 	
-	if(!img_cvt->Resize(video_stream->GetWidth(), video_stream->GetHeight(), imageConverter::ROSOutputFormat))
+	if(!p_img_cvt->Resize(video_stream->GetWidth(), video_stream->GetHeight(), imageConverter::ROSOutputFormat))
 	{
 		ROS_ERROR("Failed To Resize Img Cvt");
 		return false;	
 	}
-	
+
+	/* use detectnet */
+/*	detectNet *net = detectNet::Create("networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff", 
+									   "networks/SSD-Mobilenet-v2/ssd_coco_labels.txt",
+									   0.5000f,
+									   "Input",
+									   Dims3(3, 300, 300),
+									   "NMS",
+									   "NMS_1",
+									   );
+*/
+	const int numDetections = net->Detect(next_frame, video_stream->GetWidth(), video_stream->GetHeight(), &detections, overlayFlags);
+//	ROS_INFO("MIPI Camera Detected %i Obejcts.", numDetections);
+	/* -----  */
+
 	sensor_msgs::Image img_msg;
-	if(!img_cvt->Convert(img_msg, imageConverter::ROSOutputFormat, next_frame))
+	if(!p_img_cvt->Convert(img_msg, imageConverter::ROSOutputFormat, next_frame))
 	{
 		ROS_ERROR("Failed To Convert Video Stream");
 		return false;
 	}
-	img_pub.publish(img_msg);
+	//img_pub.publish(img_msg);
 	img_tp_pub.publish(img_msg);
 	return true;
 }

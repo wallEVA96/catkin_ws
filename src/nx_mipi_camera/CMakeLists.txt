@@ -38,6 +38,7 @@ include_directories(
 	include
 	${CUDA_INCLUDE_DIRS}
 	${catkin_INCLUDE_DIRS}
+	/usr/local/include/jetson-inference
 )
 
 add_executable(nx_mipi_camera src/nx_mipi_camera.cpp src/image_converter.cpp)
@@ -50,4 +51,8 @@ add_dependencies(nx_mipi_camera
 target_link_libraries(nx_mipi_camera
 	${catkin_LIBRARIES}
 	jetson-inference
+)
+	
+install (DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
