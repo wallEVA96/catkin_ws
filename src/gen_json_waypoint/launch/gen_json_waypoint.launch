@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="gen_json_waypoint" type="gen_json_waypoint_node" name="gen_json_waypoint_node" required="true" output="screen" /> 
+</launch>
