@@ -82,16 +82,6 @@ bool genJsonWaypoint::loadWaypointByJson()
 				tmp_waypoint.orientation.z = q_z;
 				tmp_waypoint.orientation.w = q_w;
 				poseVec.push_back(tmp_waypoint);
-				curr_waypoint_index = i;
-			/*
-			    ROS_INFO("%lf %lf %lf %lf %lf %lf %lf", tmp_waypoint.position.x,
-                                            tmp_waypoint.position.y, 
-                                            tmp_waypoint.position.z, 
-                                            tmp_waypoint.orientation.x,
-                                            tmp_waypoint.orientation.y,
-                                            tmp_waypoint.orientation.z,
-			                                tmp_waypoint.orientation.w);
-			*/
 			}
 		}
 		else
@@ -145,7 +135,7 @@ void genJsonWaypoint::wayPointDoneCallback(const actionlib::SimpleClientGoalStat
  */
 void genJsonWaypoint::wayPointFeedbackCallback(const move_base_msgs::MoveBaseFeedback::ConstPtr &feedback_ptr)
 {
-	ROS_INFO("Goal ID Feebback.");
+//	ROS_INFO("Goal ID Feebback.");
 }
 
 /**
@@ -172,6 +162,14 @@ bool genJsonWaypoint::sendCurrGoal(void)
 							  boost::bind(&genJsonWaypoint::wayPointFeedbackCallback, this, _1)
 							 );
 	ROS_INFO("Send A New Goal.");
+	ROS_INFO("%lf %lf %lf %lf %lf %lf %lf", 
+							 curr_move_base_goal.target_pose.pose.position.x,
+                             curr_move_base_goal.target_pose.pose.position.y, 
+                             curr_move_base_goal.target_pose.pose.position.z, 
+                             curr_move_base_goal.target_pose.pose.orientation.x,
+                             curr_move_base_goal.target_pose.pose.orientation.y,
+                             curr_move_base_goal.target_pose.pose.orientation.z,
+                             curr_move_base_goal.target_pose.pose.orientation.w);
 }
 
 /**
@@ -206,14 +204,20 @@ void genJsonWaypoint::wayPointScheduling(void)
 	while(ros::ok())
 	{
 		move_base_client.waitForResult(ros::Duration(1.0));
-		ROS_INFO("Move Base State: %s", move_base_client.getState().toString().c_str());
 		if(move_base_client.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
 		{
 			jumpToNextGoalIndex();
 			sendCurrGoal();
 		}
 		else
-			ROS_INFO("Unable To Get Goal State");
+		{
+			ros::Duration(1.0).sleep();
+			if(!move_base_client.getState().getText().empty())
+			{	
+				ROS_INFO("Move Base State: %s", move_base_client.getState().toString().c_str());
+				ROS_INFO("State Text: %s", move_base_client.getState().getText().c_str());
+			}
+		}
 	}
 }
 
