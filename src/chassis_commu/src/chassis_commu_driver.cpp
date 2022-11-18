@@ -92,7 +92,8 @@ chassis_commu::~chassis_commu()
  */
 void chassis_commu::openSerial()
 {
-	for(;;){
+	for(;;)
+	{
 		try{
 			ROS_INFO("Cfg ChassisCOM at Port %s, Baudrate %d", port_.c_str(), baud_rate_);
 			serial_.setPort(port_);
@@ -427,7 +428,7 @@ void chassis_commu::poll()
 	{
 		curr_tm_ = ros::Time::now();	
 		/* Timeout 100ms*/
-		if((curr_tm_-call_tm_).toSec() > 0.5)
+		if((curr_tm_-call_tm_).toSec() > 0.8)
 		{
 			if(vel_ot_flag == 0)
 			{

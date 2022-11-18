@@ -158,7 +158,7 @@ target_link_libraries(chassis_commu_node
 	${catkin_LIBRARIES}
 )
 
-message("--------------${catkin_LIBRARIES}")
+#message("--------------${catkin_LIBRARIES}")
 #############
 ## Install ##
 #############

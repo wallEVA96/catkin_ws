@@ -3,4 +3,5 @@
 	<include file="$(find screw_nav)/launch/screw_ekf.launch" />
 	<include file="$(find lslidar_n301_decoder)/launch/lslidar_n301.launch" />
 	<include file="$(find screw_nav)/launch/gmapping_ekf.launch" />
+	<include file="$(find screw_nav)/launch/move_base.launch" />
 </launch>

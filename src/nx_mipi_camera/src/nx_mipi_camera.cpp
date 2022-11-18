@@ -65,10 +65,10 @@ nx_mipi_camera::nx_mipi_camera(ros::NodeHandle &nh, ros::NodeHandle &nh_private)
 //	img_pub = nh_private.advertise<sensor_msgs::Image>("raw", 2);
 //	p_img_tp = new image_transport::ImageTransport(nh_private);
 //	img_tp_pub = p_img_tp->advertise("img_tp_raw", 1);
-	img_tp_pub = img_tp.advertise("img_tp", 2);
+	img_tp_pub = img_tp.advertise("img_tp", 3);
 
 	/* Create detectNet */
-	net = detectNet::Create(detectNet::NetworkTypeFromStr("ssd-mobilenet-v2"), 0.25f, 1);
+	net = detectNet::Create(detectNet::NetworkTypeFromStr("ssd-mobilenet-v2"), 0.45f, 1);
 //	net->SetLineWidth(3.0);;
 	if(!net){
 		ROS_ERROR("Failed To Create Detectnet.");
@@ -159,7 +159,7 @@ bool nx_mipi_camera::measureFrame()
  */
 void nx_mipi_camera::loop()
 {
-	ros::Rate loop_rate(30);
+	ros::Rate loop_rate(45);
 	while(ros::ok())
 	{
 		if(!measureFrame())
