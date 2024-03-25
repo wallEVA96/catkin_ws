@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="auto_guntower" type="auto_guntower_node" name="auto_guntower" required="true" output="screen" />
+</launch>
